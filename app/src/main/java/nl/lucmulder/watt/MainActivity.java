@@ -59,8 +59,8 @@ public class MainActivity extends AppCompatActivity {
 
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(mViewPager);
-        tabLayout.getTabAt(0).setIcon(R.drawable.ic_dashboard_black_48dp);
-        tabLayout.getTabAt(1).setIcon(R.drawable.medal);
+        tabLayout.getTabAt(0).setIcon(R.drawable.dashboard_icon);
+        tabLayout.getTabAt(1).setIcon(R.drawable.challenge_icon);
         int tabIconColor = ContextCompat.getColor(getApplicationContext(), R.color.colorAccent);
         tabLayout.getTabAt(0).getIcon().setColorFilter(tabIconColor, PorterDuff.Mode.SRC_IN);
         tabIconColor = ContextCompat.getColor(getApplicationContext(), R.color.white);
