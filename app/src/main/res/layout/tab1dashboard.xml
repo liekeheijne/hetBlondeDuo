@@ -6,6 +6,7 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
+    android:background="@drawable/background"
     tools:context="nl.lucmulder.watt.Tab1Dashboard">
 
     <TextView
@@ -15,4 +16,14 @@
         android:textSize="50dp"
         android:text="Dashboard"/>
 
+    <TextView
+        android:id="@+id/text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/section_label"
+        android:textSize="20dp"
+        android:text="Lorem ipsum dolor sit amet, consectetur adipiscing elit. In eu posuere orci. Donec venenatis consequat leo, vitae pharetra odio consequat nec. Pellentesque dapibus dignissim massa rutrum convallis. Praesent eget metus a massa sagittis lobortis. In hac habitasse platea dictumst. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Vivamus iaculis lorem porta lacus suscipit porta. Cras vitae ante orci. Aliquam nec congue lorem, volutpat accumsan neque. Pellentesque placerat commodo urna, ac auctor dui laoreet non. Vivamus nec ipsum enim.  \n  Curabitur dignissim mauris non felis eleifend, id auctor urna placerat. Nunc ultrices ligula ex, et placerat eros ultrices facilisis. Quisque in est orci. Donec ut quam velit. Nam consectetur velit eget odio auctor tristique. Aliquam sodales ligula vel sapien tincidunt tristique. Praesent laoreet posuere sem eget vulputate. Ut porttitor ultricies libero nec auctor. Sed mollis ultrices diam nec pretium. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Ut quis urna nec dui suscipit facilisis. Donec vel arcu semper, efficitur justo vel, consectetur mauris. Nunc ac odio eget ante vestibulum tempus."/>
+
+
+    
 </RelativeLayout>
