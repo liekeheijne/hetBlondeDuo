@@ -1,6 +1,15 @@
 <resources>
     <string name="app_name"></string>
     <string name="own_app_name">Watt?!</string>
-    <string name="action_settings">Settings</string>
+    <string name="action_settings">Instellingen</string>
     <string name="section_format">Hello World from section: %1$d</string>
+    <string name="title_activity_login">Inloggen</string>
+
+    <!-- Strings related to login -->
+    <string name="prompt_email">Gebruikersnaam</string>
+    <string name="prompt_password">Wachtwoord</string>
+    <string name="action_sign_in">Inloggen</string>
+    <string name="action_sign_in_short">Log in</string>
+    <string name="error_invalid_password">Dit is een verplicht veld</string>
+    <string name="error_field_required">Dit is een verplicht veld</string>
 </resources>

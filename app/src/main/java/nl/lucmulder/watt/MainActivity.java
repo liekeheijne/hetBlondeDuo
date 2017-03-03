@@ -1,5 +1,6 @@
 package nl.lucmulder.watt;
 
+import android.content.Intent;
 import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.support.design.widget.TabLayout;
@@ -22,6 +23,8 @@ import android.view.ViewGroup;
 
 import android.widget.TextView;
 
+import static nl.lucmulder.watt.R.id.toolbar;
+
 public class MainActivity extends AppCompatActivity {
 
     /**
@@ -43,6 +46,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        Intent intent = new Intent(this, LoginActivity.class);
+        startActivity(intent);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         TextView txt = (TextView) findViewById(R.id.app_name);
