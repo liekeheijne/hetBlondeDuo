@@ -7,7 +7,7 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     android:background="@drawable/background_mirrored"
-    tools:context="nl.lucmulder.watt.MainActivity$PlaceholderFragment">
+    tools:context="nl.lucmulder.watt.app.MainActivity$PlaceholderFragment">
 
     <TextView
         android:id="@+id/section_label"

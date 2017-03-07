@@ -1,11 +1,10 @@
-package nl.lucmulder.watt;
+package nl.lucmulder.watt.app;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.support.design.widget.TabLayout;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -15,15 +14,26 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.os.Bundle;
-import android.view.LayoutInflater;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
 
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
-import static nl.lucmulder.watt.R.id.toolbar;
+import com.android.volley.Request;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.util.Timer;
+import java.util.TimerTask;
+
+import nl.lucmulder.watt.R;
+import nl.lucmulder.watt.app.objects.Usage;
+import nl.lucmulder.watt.lib.CircularProgressBar;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -36,19 +46,30 @@ public class MainActivity extends AppCompatActivity {
      * {@link android.support.v4.app.FragmentStatePagerAdapter}.
      */
     private SectionsPagerAdapter mSectionsPagerAdapter;
-
+    private static final String TAG = "MainActivity";
     /**
      * The {@link ViewPager} that will host the section contents.
      */
     private ViewPager mViewPager;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Intent intent = new Intent(this, LoginActivity.class);
-        startActivity(intent);
+        SharedPreferences settings = getSharedPreferences("TOKENS", 0);
+        if(settings.getString("token", null) == null){
+
+            Log.d(TAG, "Going back to login");
+
+            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+            startActivity(intent);
+            return;
+        }else{
+            Log.d(TAG, settings.getString("token", null));
+        }
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         TextView txt = (TextView) findViewById(R.id.app_name);
@@ -99,6 +120,29 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+//        timer.cancel();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+//        timer.cancel();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+//        timer.scheduleAtFixedRate(new TimerTask(){
+//            @Override
+//            public void run(){
+//                Log.i("tag", "Update every 20 seconds");
+//                getDataTest();
+//            }
+//        },0,20000);
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -116,6 +160,8 @@ public class MainActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
             return true;
         }
 
