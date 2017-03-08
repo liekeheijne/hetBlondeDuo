@@ -23,13 +23,13 @@
             app:layout_scrollFlags="scroll|enterAlways"
             app:popupTheme="@style/AppTheme.PopupOverlay">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/own_app_name"
-            android:layout_gravity="left"
-            android:textSize="25dp"
-            android:id="@+id/app_name" />
+        <!--<TextView-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:text="@string/own_app_name"-->
+            <!--android:layout_gravity="left"-->
+            <!--android:textSize="25dp"-->
+            <!--android:id="@+id/app_name" />-->
 
         </android.support.v7.widget.Toolbar>
 

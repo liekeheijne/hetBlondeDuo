@@ -72,9 +72,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        TextView txt = (TextView) findViewById(R.id.app_name);
-        Typeface font = Typeface.createFromAsset(getAssets(), "Megrim.ttf");
-        txt.setTypeface(font);
+//        TextView txt = (TextView) findViewById(R.id.app_name);
+//        Typeface font = Typeface.createFromAsset(getAssets(), "Megrim.ttf");
+//        txt.setTypeface(font);
         setSupportActionBar(toolbar);
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
@@ -87,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(mViewPager);
         tabLayout.getTabAt(0).setIcon(R.drawable.dashboard_icon);
-        tabLayout.getTabAt(1).setIcon(R.drawable.challenge_icon);
+        tabLayout.getTabAt(1).setIcon(R.drawable.medaltab);
         int tabIconColor = ContextCompat.getColor(getApplicationContext(), R.color.colorAccent);
         tabLayout.getTabAt(0).getIcon().setColorFilter(tabIconColor, PorterDuff.Mode.SRC_IN);
         tabIconColor = ContextCompat.getColor(getApplicationContext(), R.color.white);
