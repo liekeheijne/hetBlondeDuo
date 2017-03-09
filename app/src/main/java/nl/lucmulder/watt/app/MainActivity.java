@@ -2,9 +2,11 @@ package nl.lucmulder.watt.app;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -28,14 +30,21 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import nl.lucmulder.watt.R;
 import nl.lucmulder.watt.app.objects.Usage;
 import nl.lucmulder.watt.lib.CircularProgressBar;
+import nl.lucmulder.watt.utils.ColorUtils;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity{
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -52,7 +61,13 @@ public class MainActivity extends AppCompatActivity {
      */
     private ViewPager mViewPager;
 
+    private Usage usage = null;
+    private Timer timer = new Timer();
+    private boolean timerRunning = false;
 
+    private CircularProgressBar circularProgressBarPower = null;
+    private CircularProgressBar circularProgressElectric = null;
+    private CircularProgressBar circularProgressGas = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,12 +133,29 @@ public class MainActivity extends AppCompatActivity {
                 }
         );
 
+
+        timerRunning = true;
+        timer = new Timer();
+        timer.scheduleAtFixedRate(new TimerTask(){
+            @Override
+            public void run(){
+                Log.i(TAG, "Update every 10 seconds " + new Date().toString());
+                getDataTest();
+            }
+        },100,1000);
+
+
     }
+
 
     @Override
     protected void onStop() {
         super.onStop();
 //        timer.cancel();
+        if(timer != null && timerRunning){
+            timer.cancel();
+            timerRunning = false;
+        }
     }
 
     @Override
@@ -135,13 +167,17 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-//        timer.scheduleAtFixedRate(new TimerTask(){
-//            @Override
-//            public void run(){
-//                Log.i("tag", "Update every 20 seconds");
-//                getDataTest();
-//            }
-//        },0,20000);
+        if(!timerRunning){
+            timer = new Timer();
+            timer.scheduleAtFixedRate(new TimerTask(){
+                @Override
+                public void run(){
+                    Log.i(TAG, "Onstart update every 10 seconds"  + new Date().toString());
+                    getDataTest();
+                }
+            },100,1000);
+            timerRunning = true;
+        }
     }
 
     @Override
@@ -197,5 +233,104 @@ public class MainActivity extends AppCompatActivity {
             // Show 2 total pages.
             return 2;
         }
+    }
+
+    public void getDataTest(){
+
+        RequestActionListenerInterface doRequest = new RequestActionListenerInterface() {
+            @Override
+            public void actionPerformed(JSONObject response) {
+                if(response == null){
+                    Log.d(TAG, "ERROR response = null");
+                }else{
+                    Log.d(TAG, "It all went well");
+
+                    String responseString = response.toString();
+                    //create ObjectMapper instance
+                    ObjectMapper objectMapper = new ObjectMapper();
+//
+//                            //convert json string to object
+
+                    try {
+                        usage = objectMapper.readValue(responseString, Usage.class);
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    circularProgressBarPower = (CircularProgressBar) findViewById(R.id.circularProgressPower);
+                    circularProgressElectric = (CircularProgressBar) findViewById(R.id.circularProgressElectric);
+                    circularProgressGas = (CircularProgressBar) findViewById(R.id.circularProgressGas);
+
+                    int currentWattage = Integer.parseInt(usage.huidig);
+                    float currentElectric = Float.parseFloat(usage.sinceMorningElectr);
+                    float currentGas = Float.parseFloat(usage.sinceMorningGas);
+                    int max = Integer.parseInt(usage.maxToday);
+                    Log.d(TAG, "First measurement " + usage.first.timestamp);
+
+                    SimpleDateFormat format = new SimpleDateFormat(
+                            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.GERMAN);
+                    format.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+                    try {
+                        Date firstDate = format.parse(usage.first.timestamp);
+
+                        float electricNow = Float.parseFloat(usage.dal) + Float.parseFloat(usage.piek);
+                        float electricThen = Float.parseFloat(usage.first.dal) + Float.parseFloat(usage.first.piek);
+
+                        float gasNow = Float.parseFloat(usage.gas);
+                        float gasThen = Float.parseFloat(usage.first.gas);
+
+                        int days = (int)( (new Date().getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24));
+                        float averageElectric = (electricNow - electricThen)/ days;
+                        float averageGas = (gasNow - gasThen)/ days;
+                        float percentageOfDay = ((float) new Date().getHours() / 24) + ((float) new Date().getMinutes() / (60 * 24));
+                        Log.d(TAG, "percentageOfDay " + percentageOfDay);
+                        float realisticAverageElectric = averageElectric * percentageOfDay;
+                        float realisticAverageGas = averageGas * percentageOfDay;
+                        Log.d(TAG, "averageGas " + averageGas);
+                        Log.d(TAG, "realisticAverageGas " + realisticAverageGas);
+                        float powerPercentage = (float) currentWattage/max*100;
+                        float electricPercentage = currentElectric/realisticAverageElectric*50;
+                        float gasPercentage = currentGas/realisticAverageGas*50;
+
+                        if(powerPercentage > 100){
+                            powerPercentage = 100;
+                        }
+
+                        if(electricPercentage > 100){
+                            electricPercentage = 100;
+                        }
+
+                        if(gasPercentage > 100){
+                            gasPercentage = 100;
+                        }
+
+                        if(circularProgressBarPower != null){
+                            circularProgressBarPower.setProgressColor(ColorUtils.getColor(powerPercentage/100));
+                            circularProgressBarPower.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.blue));
+                            circularProgressBarPower.setProgress(Math.round(powerPercentage), currentWattage + " W");
+                        }
+
+                        if(circularProgressElectric != null){
+                            circularProgressElectric.setProgressColor(ColorUtils.getColor(electricPercentage/100));
+                            circularProgressElectric.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.blue));
+                            circularProgressElectric.setProgress(Math.round(electricPercentage), ((float)Math.round(currentElectric*100)/100)+ " KW/h");
+                        }
+
+                        if(circularProgressGas != null){
+                            circularProgressGas.setProgressColor(ColorUtils.getColor(gasPercentage/100));
+                            circularProgressGas.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.blue));
+                            circularProgressGas.setProgress(Math.round(gasPercentage), ((float)Math.round(currentGas*100)/100)+ " M3");
+                        }
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        };
+
+        RequestHelper requestHelper = new RequestHelper(this);
+        requestHelper.doRequest(Request.Method.GET, "all", null, doRequest);
     }
 }

@@ -22,4 +22,5 @@ public class Usage {
     public SingleUsage[] lastWeek;
     public SingleUsage[] lastMonth;
     public SingleUsage[] lastYear;
+    public First first;
 }

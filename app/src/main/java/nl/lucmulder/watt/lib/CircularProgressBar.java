@@ -32,8 +32,8 @@ public class CircularProgressBar extends View {
     private int mMaxProgress = 100;             // Max progress to use
     private boolean mDrawText = true;           // Set to true if progress text should be drawn
     private boolean mRoundedCorners = true;     // Set to true if rounded corners should be applied to outline ends
-    private int mProgressColor = R.color.black; // Outline color
-    private int  mTextColor = R.color.black;    // Progress text color
+    private int mProgressColor = Color.rgb(0,0,0); // Outline color
+    private int  mTextColor = Color.rgb(0,0,0);    // Progress text color
     private String text = "";                   // Progress text
 
     private final Paint mPaint;                 // Allocate paint outside onDraw to avoid unnecessary object creation
@@ -72,8 +72,15 @@ public class CircularProgressBar extends View {
         final int diameter = Math.min(mViewWidth, mViewHeight) - (mStrokeWidth * 2);
 
         final RectF outerOval = new RectF(mStrokeWidth, mStrokeWidth, diameter, diameter);
-        int myColor = getContext().getResources().getColor(mProgressColor);
-        mPaint.setColor(myColor);
+        final RectF outerOval2 = new RectF(mStrokeWidth, mStrokeWidth, diameter, diameter);
+
+        mPaint.setColor(Color.rgb(224,224,224));
+        mPaint.setStrokeWidth(3);
+        mPaint.setAntiAlias(true);
+
+        canvas.drawArc(outerOval2, 0, 360, false, mPaint);
+
+        mPaint.setColor(mProgressColor);
         mPaint.setStrokeWidth(mStrokeWidth);
         mPaint.setAntiAlias(true);
         mPaint.setStrokeCap(mRoundedCorners ? Paint.Cap.ROUND : Paint.Cap.BUTT);
@@ -82,11 +89,10 @@ public class CircularProgressBar extends View {
     }
 
     private void drawText(Canvas canvas) {
-        mPaint.setTextSize(Math.min(mViewWidth, mViewHeight) / 5f);
+        mPaint.setTextSize(Math.min(mViewWidth, mViewHeight) / 6f);
         mPaint.setTextAlign(Paint.Align.CENTER);
         mPaint.setStrokeWidth(0);
-        int myColor = getContext().getResources().getColor(mTextColor);
-        mPaint.setColor(myColor);
+        mPaint.setColor(mTextColor);
 
         // Center text
         int xPos = (canvas.getWidth() / 2);

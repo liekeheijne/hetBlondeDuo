@@ -65,6 +65,11 @@ public class dashboard_electricity extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
+
+        MainActivity mainActivity = (MainActivity) getActivity();
+
+        mainActivity.getDataTest();
+
         return inflater.inflate(R.layout.fragment_dashboard_electricity, container, false);
     }
 
@@ -78,12 +83,6 @@ public class dashboard_electricity extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
     }
 
     @Override

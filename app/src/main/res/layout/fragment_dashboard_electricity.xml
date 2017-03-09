@@ -1,13 +1,15 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="nl.lucmulder.watt.app.dashboard_electricity">
+    android:paddingTop="20dp"
+    tools:context="nl.lucmulder.watt.app.dashboard_power">
 
     <!-- TODO: Update blank fragment layout -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="2" />
-    hello_blank_fragment
-</FrameLayout>
+    <nl.lucmulder.watt.lib.CircularProgressBar
+        android:id="@+id/circularProgressElectric"
+        android:layout_width="180dp"
+        android:layout_height="180dp"
+        android:layout_centerHorizontal="true" />
+
+</RelativeLayout>

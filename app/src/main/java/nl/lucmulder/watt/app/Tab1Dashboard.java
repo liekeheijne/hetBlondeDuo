@@ -1,11 +1,17 @@
 package nl.lucmulder.watt.app;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.view.PagerAdapter;
+import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,6 +29,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.Date;
+import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -37,11 +45,12 @@ import nl.lucmulder.watt.lib.CircularProgressBar;
 public class Tab1Dashboard extends Fragment{
 
     private final String TAG = "Tab1Dashboard";
-    private Usage usage = null;
-    private View view = null;
-    private Timer timer = new Timer();
 
-    private boolean timerRunning = false;
+
+    private SectionsPagerAdapter mSectionsPagerAdapter;
+    private ViewPager mViewPager;
+    private View view;
+    private FragmentActivity myContext;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -51,7 +60,11 @@ public class Tab1Dashboard extends Fragment{
         return rootView;
     }
 
-
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        myContext=(FragmentActivity) context;
+    }
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
@@ -61,89 +74,81 @@ public class Tab1Dashboard extends Fragment{
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
         this.view = view;
-        timerRunning = true;
-        timer = new Timer();
-        timer.scheduleAtFixedRate(new TimerTask(){
-            @Override
-            public void run(){
-                Log.i(TAG, "Update every 10 seconds");
-                getDataTest();
-            }
-        },100,10000);
+
+        mSectionsPagerAdapter = new SectionsPagerAdapter(myContext.getSupportFragmentManager());
+        mViewPager = (ViewPager) view.findViewById(R.id.pager);
+        mViewPager.setAdapter(mSectionsPagerAdapter);
+
+//        ViewPager myPager = (ViewPager) view.findViewById(R.id.pager);
+//        PagerAdapter adapter = new CircularPagerAdapter(myPager, new int[]{R.layout.fragment_dashboard_power, R.layout.fragment_dashboard_electricity, R.layout.fragment_dashboard_gas});
+//        myPager.setAdapter(adapter);
+//        myPager.setOnPageChangeListener(new CircularViewPagerHandler(myPager));
+//        myPager.setCurrentItem(3);
+
+
     }
 
-    @Override
+    public class SectionsPagerAdapter extends FragmentPagerAdapter {
+
+        public SectionsPagerAdapter(FragmentManager fm) {
+            super(fm);
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+            // getItem is called to instantiate the fragment for the given page.
+            // Return a DummySectionFragment (defined as a static inner class
+            // below) with the page number as its lone argument.
+            Fragment fragment = null;
+            if(position == 0){
+                fragment = new dashboard_power();
+
+            }
+            if(position == 1){
+                fragment = new dashboard_electricity();
+            }
+            if(position == 2){
+                fragment = new dashboard_gas();
+            }
+
+            return fragment;
+        }
+
+        @Override
+        public int getCount() {
+            // Show 3 total pages.
+            return 3;
+        }
+
+        @Override
+        public CharSequence getPageTitle(int position) {
+            Locale l = Locale.getDefault();
+            switch (position) {
+                case 0:
+                    return ("Teste1").toUpperCase(l);
+                case 1:
+                    return ("Teste2").toUpperCase(l);
+                case 2:
+                    return ("Teste3").toUpperCase(l);
+            }
+            return null;
+        }
+
+    }
+
+        @Override
     public void onStop() {
         super.onStop();
-        if(timer != null && timerRunning){
-            timer.cancel();
-            timerRunning = false;
-        }
+
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        if(!timerRunning){
-            timer = new Timer();
-            timer.scheduleAtFixedRate(new TimerTask(){
-                @Override
-                public void run(){
-                    Log.i(TAG, "Update every 10 seconds");
-                    getDataTest();
-                }
-            },100,10000);
-            timerRunning = true;
-        }
+
 
     }
 
-    private void getDataTest(){
 
-        RequestActionListenerInterface doRequest = new RequestActionListenerInterface() {
-            @Override
-            public void actionPerformed(JSONObject response) {
-                if(response == null){
-                    Log.d(TAG, "ERROR response = null");
-                }else{
-                    Log.d(TAG, "It all went well");
-
-                    String responseString = response.toString();
-                    //create ObjectMapper instance
-                    ObjectMapper objectMapper = new ObjectMapper();
-//
-//                            //convert json string to object
-
-                    try {
-                        usage = objectMapper.readValue(responseString, Usage.class);
-
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-
-                    CircularProgressBar circularProgressBar = (CircularProgressBar) view.findViewById(R.id.circularProgress);
-//                    CircularProgressBar circularProgressBar2 = (CircularProgressBar) view.findViewById(R.id.circularProgress2);
-
-                    int currentWattage = Integer.parseInt(usage.huidig);
-                    int max = Integer.parseInt(usage.maxToday);
-//                    int max = 700;
-
-                    float percentage = (float) currentWattage/max*100;
-                    circularProgressBar.setProgressColor(R.color.blue);
-                    circularProgressBar.setTextColor(R.color.blue);
-                    circularProgressBar.setProgress(Math.round(percentage), currentWattage+ " W");
-
-//                    circularProgressBar2.setProgressColor(R.color.blue);
-//                    circularProgressBar2.setTextColor(R.color.blue);
-//                    circularProgressBar2.setProgress(Math.round(percentage), currentWattage+ " W");
-                }
-            }
-        };
-
-        RequestHelper requestHelper = new RequestHelper(getActivity());
-        requestHelper.doRequest(Request.Method.GET, "all", null, doRequest);
     }
-}
