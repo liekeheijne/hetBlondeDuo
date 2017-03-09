@@ -5,11 +5,20 @@
     android:paddingTop="20dp"
     tools:context="nl.lucmulder.watt.app.dashboard_power">
 
-    <!-- TODO: Update blank fragment layout -->
-    <nl.lucmulder.watt.lib.CircularProgressBar
-    android:id="@+id/circularProgressPower"
-    android:layout_width="180dp"
-    android:layout_height="180dp"
-    android:layout_centerHorizontal="true" />
+
+        <nl.lucmulder.watt.lib.CircularProgressBar
+            android:id="@+id/circularProgressPower"
+            android:layout_width="180dp"
+            android:layout_height="180dp"
+
+            android:layout_centerHorizontal="true" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/powerView"
+        android:layout_below="@+id/circularProgressPower"
+        android:textAlignment="center"
+        android:textSize="30sp"/>
 
 </RelativeLayout>

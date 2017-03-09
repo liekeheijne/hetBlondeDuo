@@ -16,6 +16,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.os.Bundle;
+import android.text.Html;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -63,11 +64,15 @@ public class MainActivity extends AppCompatActivity{
 
     private Usage usage = null;
     private Timer timer = new Timer();
-    private boolean timerRunning = false;
+    private boolean timerRunning = true;
 
     private CircularProgressBar circularProgressBarPower = null;
     private CircularProgressBar circularProgressElectric = null;
     private CircularProgressBar circularProgressGas = null;
+
+    private TextView powerView = null;
+    private TextView gasView = null;
+    private TextView electricView = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,6 +89,7 @@ public class MainActivity extends AppCompatActivity{
             return;
         }else{
             Log.d(TAG, settings.getString("token", null));
+            timerRunning = false;
         }
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -142,7 +148,7 @@ public class MainActivity extends AppCompatActivity{
                 Log.i(TAG, "Update every 10 seconds " + new Date().toString());
                 getDataTest();
             }
-        },100,1000);
+        },100,5000);
 
 
     }
@@ -175,7 +181,7 @@ public class MainActivity extends AppCompatActivity{
                     Log.i(TAG, "Onstart update every 10 seconds"  + new Date().toString());
                     getDataTest();
                 }
-            },100,1000);
+            },100,5000);
             timerRunning = true;
         }
     }
@@ -262,6 +268,11 @@ public class MainActivity extends AppCompatActivity{
                     circularProgressElectric = (CircularProgressBar) findViewById(R.id.circularProgressElectric);
                     circularProgressGas = (CircularProgressBar) findViewById(R.id.circularProgressGas);
 
+                    powerView = (TextView) findViewById(R.id.powerView);
+                    gasView = (TextView) findViewById(R.id.gasView);
+                    electricView = (TextView) findViewById(R.id.electricView);
+
+
                     int currentWattage = Integer.parseInt(usage.huidig);
                     float currentElectric = Float.parseFloat(usage.sinceMorningElectr);
                     float currentGas = Float.parseFloat(usage.sinceMorningGas);
@@ -310,19 +321,41 @@ public class MainActivity extends AppCompatActivity{
                             circularProgressBarPower.setProgressColor(ColorUtils.getColor(powerPercentage/100));
                             circularProgressBarPower.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.blue));
                             circularProgressBarPower.setProgress(Math.round(powerPercentage), currentWattage + " W");
+                            circularProgressBarPower.setImage(R.drawable.flash);
                         }
 
                         if(circularProgressElectric != null){
                             circularProgressElectric.setProgressColor(ColorUtils.getColor(electricPercentage/100));
                             circularProgressElectric.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.blue));
                             circularProgressElectric.setProgress(Math.round(electricPercentage), ((float)Math.round(currentElectric*100)/100)+ " KW/h");
+                            circularProgressElectric.setImage(R.drawable.battery);
                         }
 
                         if(circularProgressGas != null){
                             circularProgressGas.setProgressColor(ColorUtils.getColor(gasPercentage/100));
                             circularProgressGas.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.blue));
                             circularProgressGas.setProgress(Math.round(gasPercentage), ((float)Math.round(currentGas*100)/100)+ " M3");
+                            circularProgressGas.setImage(R.drawable.flame);
                         }
+
+                        Typeface font = Typeface.createFromAsset(getAssets(), "Megrim.ttf");
+
+                        if(powerView != null){
+                            powerView.setText(currentWattage + " W");
+                            powerView.setTypeface(font);
+                        }
+
+                        if(gasView != null){
+                            gasView.setText(Html.fromHtml(((float)Math.round(currentGas*100)/100)+ " M<sup>3</sup>"));
+//                            gasView.setText(((float)Math.round(currentGas*100)/100)+ " M3");
+                            gasView.setTypeface(font);
+                        }
+
+                        if(electricView != null){
+                            electricView.setText(((float)Math.round(currentElectric*100)/100)+ " KW/h");
+                            electricView.setTypeface(font);
+                        }
+
                     } catch (ParseException e) {
                         e.printStackTrace();
                     }

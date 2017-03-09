@@ -3,13 +3,29 @@ package nl.lucmulder.watt.lib;
 
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.ColorMatrix;
+import android.graphics.ColorMatrixColorFilter;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.os.Build;
+import android.os.Environment;
+import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
+import android.view.Display;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
 
 import nl.lucmulder.watt.R;
 
@@ -30,11 +46,14 @@ public class CircularProgressBar extends View {
     private int mStrokeWidth = 20;              // Width of outline
     private int mAnimationDuration = 400;       // Animation duration for progress change
     private int mMaxProgress = 100;             // Max progress to use
-    private boolean mDrawText = true;           // Set to true if progress text should be drawn
+    private boolean mDrawText = false;
+    private boolean mDrawImage = true;  // Set to true if progress text should be drawn
     private boolean mRoundedCorners = true;     // Set to true if rounded corners should be applied to outline ends
-    private int mProgressColor = Color.rgb(0,0,0); // Outline color
-    private int  mTextColor = Color.rgb(0,0,0);    // Progress text color
+    private int mProgressColor = Color.rgb(0, 0, 0); // Outline color
+    private int mTextColor = Color.rgb(0, 0, 0);    // Progress text color
+    private int mImage = R.drawable.flash;
     private String text = "";                   // Progress text
+    private Context context = null;
 
     private final Paint mPaint;                 // Allocate paint outside onDraw to avoid unnecessary object creation
 
@@ -48,6 +67,7 @@ public class CircularProgressBar extends View {
 
     public CircularProgressBar(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        this.context = context;
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     }
 
@@ -57,9 +77,17 @@ public class CircularProgressBar extends View {
         initMeasurments();
         drawOutlineArc(canvas);
 
+        if (mDrawImage && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            drawImage(canvas);
+        } else {
+            mDrawText = true;
+        }
+
         if (mDrawText) {
             drawText(canvas);
         }
+
+
     }
 
     private void initMeasurments() {
@@ -74,7 +102,7 @@ public class CircularProgressBar extends View {
         final RectF outerOval = new RectF(mStrokeWidth, mStrokeWidth, diameter, diameter);
         final RectF outerOval2 = new RectF(mStrokeWidth, mStrokeWidth, diameter, diameter);
 
-        mPaint.setColor(Color.rgb(224,224,224));
+        mPaint.setColor(getResources().getColor(R.color.lightGrey));
         mPaint.setStrokeWidth(3);
         mPaint.setAntiAlias(true);
 
@@ -86,6 +114,15 @@ public class CircularProgressBar extends View {
         mPaint.setStrokeCap(mRoundedCorners ? Paint.Cap.ROUND : Paint.Cap.BUTT);
         mPaint.setStyle(Paint.Style.STROKE);
         canvas.drawArc(outerOval, mStartAngle, mSweepAngle, false, mPaint);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    private void drawImage(Canvas canvas) {
+        Bitmap b = BitmapFactory.decodeResource(getResources(), mImage);
+        b = scaleBitmap(b, ((canvas.getHeight() / 2) * b.getWidth()) / b.getHeight(), (canvas.getHeight() / 2));
+        int xPos = (int) ((canvas.getWidth() / 2) - ((mPaint.descent() + mPaint.ascent()) / 2) - (b.getWidth()/2));
+        int yPos = (int) ((canvas.getHeight() / 2) - ((mPaint.descent() + mPaint.ascent()) / 2) - (b.getHeight()/2));
+        canvas.drawBitmap(b, xPos, yPos, mPaint);
     }
 
     private void drawText(Canvas canvas) {
@@ -134,6 +171,11 @@ public class CircularProgressBar extends View {
         invalidate();
     }
 
+    public void setImage(int imageResource) {
+        mImage = imageResource;
+        invalidate();
+    }
+
     public void setProgressWidth(int width) {
         mStrokeWidth = width;
         invalidate();
@@ -158,5 +200,65 @@ public class CircularProgressBar extends View {
     public void useRoundedCorners(boolean roundedCorners) {
         mRoundedCorners = roundedCorners;
         invalidate();
+    }
+
+
+    /**
+     * decodes a bitmap from a resource id. returns a mutable bitmap no matter what is the API level.<br/>
+     * might use the internal storage in some cases, creating temporary file that will be deleted as soon as it isn't finished
+     */
+    public static Bitmap decodeMutableBitmapFromResourceId(final Context context, final int bitmapResId) {
+        final BitmapFactory.Options bitmapOptions = new BitmapFactory.Options();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
+            bitmapOptions.inMutable = true;
+        Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), bitmapResId, bitmapOptions);
+        if (!bitmap.isMutable())
+            bitmap = convertToMutable(context, bitmap);
+        return bitmap;
+    }
+
+    public static Bitmap convertToMutable(final Context context, final Bitmap imgIn) {
+        final int width = imgIn.getWidth(), height = imgIn.getHeight();
+        final Bitmap.Config type = imgIn.getConfig();
+        File outputFile = null;
+        final File outputDir = context.getCacheDir();
+        try {
+            outputFile = File.createTempFile(Long.toString(System.currentTimeMillis()), null, outputDir);
+            outputFile.deleteOnExit();
+            final RandomAccessFile randomAccessFile = new RandomAccessFile(outputFile, "rw");
+            final FileChannel channel = randomAccessFile.getChannel();
+            final MappedByteBuffer map = channel.map(FileChannel.MapMode.READ_WRITE, 0, imgIn.getRowBytes() * height);
+            imgIn.copyPixelsToBuffer(map);
+            imgIn.recycle();
+            final Bitmap result = Bitmap.createBitmap(width, height, type);
+            map.position(0);
+            result.copyPixelsFromBuffer(map);
+            channel.close();
+            randomAccessFile.close();
+            outputFile.delete();
+            return result;
+        } catch (final Exception e) {
+        } finally {
+            if (outputFile != null)
+                outputFile.delete();
+        }
+        return null;
+    }
+
+
+    public static Bitmap scaleBitmap(Bitmap bitmapToScale, float newWidth, float newHeight) {
+        if (bitmapToScale == null)
+            return null;
+//get the original width and height
+        int width = bitmapToScale.getWidth();
+        int height = bitmapToScale.getHeight();
+// create a matrix for the manipulation
+        Matrix matrix = new Matrix();
+
+// resize the bit map
+        matrix.postScale(newWidth / width, newHeight / height);
+
+// recreate the new Bitmap and set it back
+        return Bitmap.createBitmap(bitmapToScale, 0, 0, bitmapToScale.getWidth(), bitmapToScale.getHeight(), matrix, true);
     }
 }
