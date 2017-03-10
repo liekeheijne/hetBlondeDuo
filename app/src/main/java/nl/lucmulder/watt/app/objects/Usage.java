@@ -14,8 +14,7 @@ public class Usage {
     public String max;
     public String minToday;
     public String maxToday;
-    public String sinceMorningElectr;
-    public String sinceMorningGas;
+    public SingleUsage sinceMorning;
     public SingleUsageExtended[] lastMinutes;
     public SingleUsageExtended[] lastHour;
     public SingleUsage[] lastDay;
@@ -23,4 +22,6 @@ public class Usage {
     public SingleUsage[] lastMonth;
     public SingleUsage[] lastYear;
     public First first;
+    public SingleUsage thisWeek;
+    public SingleUsage thisMonth;
 }

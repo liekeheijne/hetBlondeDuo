@@ -54,7 +54,7 @@ public class RequestHelper {
 
         SharedPreferences settings = context.getSharedPreferences("TOKENS", 0);
         if(settings.getString("expires", null) == null){
-            Log.d(TAG, "expires null");
+//            Log.d(TAG, "expires null");
             Intent intent = new Intent(context.getApplicationContext(), MainActivity.class);
             context.startActivity(intent);
         }else{
@@ -63,13 +63,13 @@ public class RequestHelper {
             expiresMillis = expiresMillis - (5*60*1000); //subtract 5 minutes for ensurance;
 
             Date expires = new Date(expiresMillis);
-            Log.d(TAG, "Expires: "+ expires.toString());
-            Log.d(TAG, "Now: "+ new Date());
+//            Log.d(TAG, "Expires: "+ expires.toString());
+//            Log.d(TAG, "Now: "+ new Date());
             if(expires.before(new Date())){ //tokens expired;
                 Log.d(TAG, "Token expired, getting new one");
                 getRefreshTokens(RequestType, subUrl, json, actionPerformed);
             }else{
-                Log.d(TAG, "Straight to request");
+//                Log.d(TAG, "Straight to request");
                 doInternalRequest(RequestType, subUrl, json, actionPerformed);
             }
         }
@@ -121,7 +121,7 @@ public class RequestHelper {
             SharedPreferences settings = context.getSharedPreferences("TOKENS", 0);
             String user = settings.getString("user", null);
             String requestToken = settings.getString("refresh_token", null);
-            Log.d(TAG, "Refreshtoken: " + requestToken);
+//            Log.d(TAG, "Refreshtoken: " + requestToken);
             js.put("username", user);
             js.put("refresh_token", requestToken);
         } catch (JSONException e) {
@@ -139,7 +139,7 @@ public class RequestHelper {
 
                     @Override
                     public void onResponse(JSONObject response) {
-                        Log.d(TAG, "Response: " + response.toString());
+//                        Log.d(TAG, "Response: " + response.toString());
 
                         String responseString = response.toString();
                         //create ObjectMapper instance

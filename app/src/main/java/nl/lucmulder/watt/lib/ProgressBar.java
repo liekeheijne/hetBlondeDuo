@@ -7,23 +7,16 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.ColorMatrix;
-import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.RectF;
-import android.graphics.Typeface;
 import android.os.Build;
-import android.os.Environment;
 import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
-import android.view.Display;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
@@ -36,7 +29,7 @@ import nl.lucmulder.watt.R;
  * Progress change will be animated.
  * Created by Kristoffer, http://kmdev.se
  */
-public class CircularProgressBar extends View {
+public class ProgressBar extends View {
 
     private int mViewWidth;
     private int mViewHeight;
@@ -47,7 +40,7 @@ public class CircularProgressBar extends View {
     private int mStrokeWidth = 20;              // Width of outline
     private int mAnimationDuration = 400;       // Animation duration for progress change
     private int mMaxProgress = 100;             // Max progress to use
-    private boolean mDrawText = true;
+    private boolean mDrawText = false;
     private boolean mDrawImage = true;  // Set to true if progress text should be drawn
     private boolean mRoundedCorners = true;     // Set to true if rounded corners should be applied to outline ends
     private int mProgressColor = Color.rgb(0, 0, 0); // Outline color
@@ -58,15 +51,15 @@ public class CircularProgressBar extends View {
 
     private final Paint mPaint;                 // Allocate paint outside onDraw to avoid unnecessary object creation
 
-    public CircularProgressBar(Context context) {
+    public ProgressBar(Context context) {
         this(context, null);
     }
 
-    public CircularProgressBar(Context context, AttributeSet attrs) {
+    public ProgressBar(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public CircularProgressBar(Context context, AttributeSet attrs, int defStyleAttr) {
+    public ProgressBar(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         this.context = context;
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -121,23 +114,20 @@ public class CircularProgressBar extends View {
     private void drawImage(Canvas canvas) {
         Bitmap b = BitmapFactory.decodeResource(getResources(), mImage);
         b = scaleBitmap(b, ((canvas.getHeight() / 2) * b.getWidth()) / b.getHeight(), (canvas.getHeight() / 2));
-        int xPos = (int) ((canvas.getWidth() / 2) - (b.getWidth()/2));
-        int yPos = (int) ((canvas.getHeight() / 2) - (b.getHeight()/2));
+        int xPos = (int) ((canvas.getWidth() / 2) - ((mPaint.descent() + mPaint.ascent()) / 2) - (b.getWidth()/2));
+        int yPos = (int) ((canvas.getHeight() / 2) - ((mPaint.descent() + mPaint.ascent()) / 2) - (b.getHeight()/2));
         canvas.drawBitmap(b, xPos, yPos, mPaint);
     }
 
     private void drawText(Canvas canvas) {
-        Typeface typeface = Typeface.createFromAsset(context.getAssets(), "Roboto-Thin.ttf");
-        mPaint.setTypeface(typeface);
-        float textSize = Math.min(mViewWidth, mViewHeight) / 10f;
-        mPaint.setTextSize(textSize);
+        mPaint.setTextSize(Math.min(mViewWidth, mViewHeight) / 6f);
         mPaint.setTextAlign(Paint.Align.CENTER);
         mPaint.setStrokeWidth(0);
         mPaint.setColor(mTextColor);
 
         // Center text
         int xPos = (canvas.getWidth() / 2);
-        int yPos = (int) (canvas.getHeight()-(textSize+25));
+        int yPos = (int) ((canvas.getHeight() / 2) - ((mPaint.descent() + mPaint.ascent()) / 2));
 
         canvas.drawText(text, xPos, yPos, mPaint);
     }
@@ -155,8 +145,8 @@ public class CircularProgressBar extends View {
      *
      * @param progress progress between 0 and 100.
      */
-    public void setProgress(int progress) {
-
+    public void setProgress(int progress, String text) {
+        this.text = text;
         ValueAnimator animator = ValueAnimator.ofFloat(mSweepAngle, calcSweepAngleFromProgress(progress));
         animator.setInterpolator(new DecelerateInterpolator());
         animator.setDuration(mAnimationDuration);
@@ -168,11 +158,6 @@ public class CircularProgressBar extends View {
             }
         });
         animator.start();
-    }
-
-    public void setText(String text){
-        this.text = text;
-        invalidate();
     }
 
     public void setProgressColor(int color) {
