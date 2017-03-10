@@ -282,164 +282,9 @@ public class MainActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
 
-                    circularProgressBarPower = (CircularProgressBar) findViewById(R.id.circularProgressPower);
-                    circularProgressElectric = (CircularProgressBar) findViewById(R.id.circularProgressElectric);
-                    circularProgressGas = (CircularProgressBar) findViewById(R.id.circularProgressGas);
-
-                    powerView = (TextView) findViewById(R.id.powerView);
-                    gasView = (TextView) findViewById(R.id.gasView);
-                    electricView = (TextView) findViewById(R.id.electricView);
-
-
-                    int currentWattage = Integer.parseInt(usage.huidig);
-                    int max = Integer.parseInt(usage.maxToday);
-
-                    float powerPercentage = (float) currentWattage / max * 100;
-
-                    if (powerPercentage > 100) {
-                        powerPercentage = 100;
-                    }
-
-                    if (circularProgressBarPower != null) {
-                        circularProgressBarPower.setProgressColor(ColorUtils.getColor(powerPercentage / 100));
-                        circularProgressBarPower.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.blue));
-                        circularProgressBarPower.setProgress(Math.round(powerPercentage));
-                        circularProgressBarPower.setText(currentWattage + " W");
-                        circularProgressBarPower.setImage(R.drawable.flash);
-                        circularProgressBarPower.showProgressText(false);
-                    }
-
-                    if (circularProgressElectric != null) {
-                        circularProgressElectric.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View view) {
-                                Log.d(TAG, "Electric graph clicked");
-                                electricityPeriod++;
-                                if (electricityPeriod > 2) {
-                                    electricityPeriod = 0;
-                                }
-                                Log.d(TAG, "electricityPeriod " + electricityPeriod);
-                                Log.d(TAG, "Period.DAY " + Period.DAY);
-                                switch (electricityPeriod) {
-                                    case Period.DAY:
-                                        circularProgressElectric.setText("Dag");
-                                        circularProgressElectric.setProgressColor(ColorUtils.getColor(getPercentageDayElectric(usage) / 100));
-                                        circularProgressElectric.setProgress(getPercentageDayElectric(usage));
-                                        electricView.setText(getTextElectricDay(usage));
-                                        break;
-                                    case Period.WEEK:
-                                        circularProgressElectric.setText("Week");
-                                        circularProgressElectric.setProgressColor(ColorUtils.getColor(getPercentageWeekElectric(usage) / 100));
-                                        circularProgressElectric.setProgress(getPercentageWeekElectric(usage));
-                                        electricView.setText(getTextElectricWeek(usage));
-                                        break;
-                                    case Period.MONTH:
-                                        circularProgressElectric.setText("Maand");
-                                        circularProgressElectric.setProgressColor(ColorUtils.getColor(getPercentageMonthElectric(usage) / 100));
-                                        circularProgressElectric.setProgress(getPercentageMonthElectric(usage));
-                                        electricView.setText(getTextElectricMonth(usage));
-                                        break;
-                                }
-                            }
-                        });
-
-                        circularProgressElectric.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.blue));
-                        switch (electricityPeriod) {
-                            case Period.DAY:
-                                circularProgressElectric.setText("Dag");
-                                circularProgressElectric.setProgressColor(ColorUtils.getColor(getPercentageDayElectric(usage) / 100));
-                                circularProgressElectric.setProgress(getPercentageDayElectric(usage));
-                                electricView.setText(getTextElectricDay(usage));
-                                break;
-                            case Period.WEEK:
-                                circularProgressElectric.setText("Week");
-                                circularProgressElectric.setProgressColor(ColorUtils.getColor(getPercentageWeekElectric(usage) / 100));
-                                circularProgressElectric.setProgress(getPercentageWeekElectric(usage));
-                                electricView.setText(getTextElectricWeek(usage));
-                                break;
-                            case Period.MONTH:
-                                circularProgressElectric.setText("Maand");
-                                circularProgressElectric.setProgressColor(ColorUtils.getColor(getPercentageMonthElectric(usage) / 100));
-                                circularProgressElectric.setProgress(getPercentageMonthElectric(usage));
-                                electricView.setText(getTextElectricMonth(usage));
-                                break;
-                        }
-                        circularProgressElectric.setImage(R.drawable.battery);
-                    }
-
-                    if (circularProgressGas != null) {
-                        circularProgressGas.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View view) {
-                                Log.d(TAG, "Gas graph clicked");
-                                gasPeriod++;
-                                if (gasPeriod > 2) {
-                                    gasPeriod = 0;
-                                }
-                                switch (gasPeriod) {
-                                    case Period.DAY:
-                                        circularProgressGas.setText("Dag");
-                                        circularProgressGas.setProgressColor(ColorUtils.getColor(getPercentageDayGas(usage) / 100));
-                                        circularProgressGas.setProgress(getPercentageDayGas(usage));
-                                        gasView.setText(getTextGasDay(usage));
-
-                                        break;
-                                    case Period.WEEK:
-                                        circularProgressGas.setText("Week");
-                                        circularProgressGas.setProgressColor(ColorUtils.getColor(getPercentageWeekGas(usage) / 100));
-                                        circularProgressGas.setProgress(getPercentageWeekGas(usage));
-                                        gasView.setText(getTextGasWeek(usage));
-                                        break;
-                                    case Period.MONTH:
-                                        circularProgressGas.setText("Maand");
-                                        circularProgressGas.setProgressColor(ColorUtils.getColor(getPercentageMonthGas(usage) / 100));
-                                        circularProgressGas.setProgress(getPercentageMonthGas(usage));
-                                        gasView.setText(getTextGasMonth(usage));
-                                        break;
-                                }
-                            }
-                        });
-                        circularProgressGas.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.blue));
-                        switch (gasPeriod) {
-                            case Period.DAY:
-                                circularProgressGas.setText("Dag");
-                                circularProgressGas.setProgressColor(ColorUtils.getColor(getPercentageDayGas(usage) / 100));
-                                circularProgressGas.setProgress(getPercentageDayGas(usage));
-                                gasView.setText(getTextGasDay(usage));
-
-                                break;
-                            case Period.WEEK:
-                                circularProgressGas.setText("Week");
-                                circularProgressGas.setProgressColor(ColorUtils.getColor(getPercentageWeekGas(usage) / 100));
-                                circularProgressGas.setProgress(getPercentageWeekGas(usage));
-                                gasView.setText(getTextGasWeek(usage));
-                                break;
-                            case Period.MONTH:
-                                circularProgressGas.setText("Maand");
-                                circularProgressGas.setProgressColor(ColorUtils.getColor(getPercentageMonthGas(usage) / 100));
-                                circularProgressGas.setProgress(getPercentageMonthGas(usage));
-                                gasView.setText(getTextGasMonth(usage));
-                                break;
-                        }
-
-                        circularProgressGas.setImage(R.drawable.flame);
-                    }
-
-                    Typeface font = Typeface.createFromAsset(getAssets(), "Megrim.ttf");
-
-                    if (powerView != null) {
-                        powerView.setText(currentWattage + " W");
-                        powerView.setTypeface(font);
-                    }
-
-                    if (gasView != null) {
-                        gasView.setTypeface(font);
-                    }
-
-                    if (electricView != null) {
-                        electricView.setTypeface(font);
-                    }
-
+                    initPowerView();
+                    initViewElectric();
+                    initViewGas();
 
                 }
             }
@@ -735,6 +580,148 @@ public class MainActivity extends AppCompatActivity {
 
     private Spanned getTextGasMonth(Usage usage) {
         return Html.fromHtml(((float) Math.round(Float.parseFloat(usage.thisMonth.gas) * 100) / 100) + " M<sup>3</sup>");
+    }
+
+    private void initPowerView(){
+
+        circularProgressBarPower = (CircularProgressBar) findViewById(R.id.circularProgressPower);
+        powerView = (TextView) findViewById(R.id.powerView);
+
+        int currentWattage = Integer.parseInt(usage.huidig);
+        int max = Integer.parseInt(usage.maxToday);
+
+        float powerPercentage = (float) currentWattage / max * 100;
+
+        if (powerPercentage > 100) {
+            powerPercentage = 100;
+        }
+
+        if (circularProgressBarPower != null) {
+            circularProgressBarPower.setProgressColor(ColorUtils.getColor(powerPercentage / 100));
+            circularProgressBarPower.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.blue));
+            circularProgressBarPower.setProgress(Math.round(powerPercentage));
+            circularProgressBarPower.setText(currentWattage + " W");
+            circularProgressBarPower.setImage(R.drawable.flash);
+            circularProgressBarPower.showProgressText(false);
+        }
+
+        Typeface font = Typeface.createFromAsset(getAssets(), "Megrim.ttf");
+
+        if (powerView != null) {
+            powerView.setText(currentWattage + " W");
+            powerView.setTypeface(font);
+        }
+    }
+
+    private void initViewElectric(){
+
+        circularProgressElectric = (CircularProgressBar) findViewById(R.id.circularProgressElectric);
+        electricView = (TextView) findViewById(R.id.electricView);
+
+        if (circularProgressElectric != null) {
+            circularProgressElectric.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Log.d(TAG, "Electric graph clicked");
+                    electricityPeriod++;
+                    if (electricityPeriod > 2) {
+                        electricityPeriod = 0;
+                    }
+                    Log.d(TAG, "electricityPeriod " + electricityPeriod);
+                    Log.d(TAG, "Period.DAY " + Period.DAY);
+
+                    updateViewELectric();
+
+                }
+            });
+
+            circularProgressElectric.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.blue));
+            updateViewELectric();
+            circularProgressElectric.setImage(R.drawable.battery);
+        }
+
+        Typeface font = Typeface.createFromAsset(getAssets(), "Megrim.ttf");
+        if (electricView != null) {
+            electricView.setTypeface(font);
+        }
+    }
+
+    private void updateViewELectric(){
+        switch (electricityPeriod) {
+            case Period.DAY:
+                circularProgressElectric.setText("Dag");
+                circularProgressElectric.setProgressColor(ColorUtils.getColor((float)getPercentageDayElectric(usage)/100));
+                circularProgressElectric.setProgress(getPercentageDayElectric(usage));
+                electricView.setText(getTextElectricDay(usage));
+                break;
+            case Period.WEEK:
+                circularProgressElectric.setText("Week");
+                circularProgressElectric.setProgressColor(ColorUtils.getColor((float)getPercentageWeekElectric(usage)/100));
+                circularProgressElectric.setProgress(getPercentageWeekElectric(usage));
+                electricView.setText(getTextElectricWeek(usage));
+                break;
+            case Period.MONTH:
+                circularProgressElectric.setText("Maand");
+                circularProgressElectric.setProgressColor(ColorUtils.getColor((float)getPercentageMonthElectric(usage)/100));
+                circularProgressElectric.setProgress(getPercentageMonthElectric(usage));
+                electricView.setText(getTextElectricMonth(usage));
+                break;
+        }
+    }
+
+    private void initViewGas(){
+
+        circularProgressGas = (CircularProgressBar) findViewById(R.id.circularProgressGas);
+        gasView = (TextView) findViewById(R.id.gasView);
+
+        if (circularProgressGas != null) {
+            circularProgressGas.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Log.d(TAG, "Gas graph clicked");
+                    gasPeriod++;
+                    if (gasPeriod > 2) {
+                        gasPeriod = 0;
+                    }
+                    updateViewGas();
+                }
+            });
+
+            circularProgressGas.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.blue));
+            updateViewGas();
+
+            circularProgressGas.setImage(R.drawable.flame);
+        }
+
+        Typeface font = Typeface.createFromAsset(getAssets(), "Megrim.ttf");
+        if (gasView != null) {
+            gasView.setTypeface(font);
+        }
+    }
+
+    private void updateViewGas(){
+        switch (gasPeriod) {
+            case Period.DAY:
+                circularProgressGas.setText("Dag");
+                circularProgressGas.setProgressColor(ColorUtils.getColor((float)getPercentageDayGas(usage)/100));
+                circularProgressGas.setProgress(getPercentageDayGas(usage));
+                gasView.setText(getTextGasDay(usage));
+
+                break;
+            case Period.WEEK:
+                circularProgressGas.setText("Week");
+                circularProgressGas.setProgressColor(ColorUtils.getColor((float)getPercentageWeekGas(usage)/100));
+                circularProgressGas.setProgress(getPercentageWeekGas(usage));
+                gasView.setText(getTextGasWeek(usage));
+                break;
+            case Period.MONTH:
+                circularProgressGas.setText("Maand");
+                circularProgressGas.setProgressColor(ColorUtils.getColor((float)getPercentageMonthGas(usage)/100));
+                circularProgressGas.setProgress(getPercentageMonthGas(usage));
+                gasView.setText(getTextGasMonth(usage));
+                break;
+        }
+
     }
 
 }
