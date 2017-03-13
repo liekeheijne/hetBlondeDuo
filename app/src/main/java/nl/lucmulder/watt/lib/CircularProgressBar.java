@@ -7,16 +7,22 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.ColorFilter;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
+import android.graphics.LightingColorFilter;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.PointF;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Environment;
 import android.support.annotation.RequiresApi;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.Display;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
@@ -53,8 +59,13 @@ public class CircularProgressBar extends View {
     private int mProgressColor = Color.rgb(0, 0, 0); // Outline color
     private int mTextColor = Color.rgb(0, 0, 0);    // Progress text color
     private int mImage = R.drawable.flash;
+    private int mProgress = 0;
     private String text = "";                   // Progress text
     private Context context = null;
+
+    private final String TAG = "CircularProgressBar";
+
+    private int offsetY = 13;
 
     private final Paint mPaint;                 // Allocate paint outside onDraw to avoid unnecessary object creation
 
@@ -88,6 +99,8 @@ public class CircularProgressBar extends View {
             drawText(canvas);
         }
 
+        drawArrow(canvas);
+
 
     }
 
@@ -100,8 +113,8 @@ public class CircularProgressBar extends View {
 
         final int diameter = Math.min(mViewWidth, mViewHeight) - (mStrokeWidth * 2);
 
-        final RectF outerOval = new RectF(mStrokeWidth, mStrokeWidth, diameter, diameter);
-        final RectF outerOval2 = new RectF(mStrokeWidth, mStrokeWidth, diameter, diameter);
+        final RectF outerOval = new RectF(mStrokeWidth, mStrokeWidth+offsetY, diameter, diameter);
+        final RectF outerOval2 = new RectF(mStrokeWidth, mStrokeWidth+offsetY, diameter, diameter);
 
         mPaint.setColor(getResources().getColor(R.color.lightGrey));
         mPaint.setStrokeWidth(3);
@@ -117,13 +130,29 @@ public class CircularProgressBar extends View {
         canvas.drawArc(outerOval, mStartAngle, mSweepAngle, false, mPaint);
     }
 
+    private void drawArrow(Canvas canvas){
+        final int diameter = Math.min(mViewWidth, mViewHeight) - (mStrokeWidth * 2);
+
+        Bitmap b = BitmapFactory.decodeResource(getResources(), R.drawable.arrow);
+        b = scaleBitmap(b, mStrokeWidth*3, (mStrokeWidth*3 * b.getHeight()) / b.getWidth(), mSweepAngle);
+        int xPos = (int) ((canvas.getWidth() / 2) - (b.getWidth()/2));
+        int yPos = (int) ((canvas.getHeight() / 2) - (b.getHeight()/2));
+
+        PointF center = new PointF(xPos-mStrokeWidth/2, yPos-mStrokeWidth/2);
+        Log.d(TAG, "Center y " +center.y);
+        PointF position = getPosition(center, diameter/2 - mStrokeWidth/2 ,mSweepAngle-90);
+        mPaint.setColorFilter(new PorterDuffColorFilter(mProgressColor, PorterDuff.Mode.SRC_IN));
+        canvas.drawBitmap(b, position.x, position.y, mPaint);
+        mPaint.setColorFilter(null);
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void drawImage(Canvas canvas) {
         Bitmap b = BitmapFactory.decodeResource(getResources(), mImage);
-        b = scaleBitmap(b, ((canvas.getHeight() / 2) * b.getWidth()) / b.getHeight(), (canvas.getHeight() / 2));
+        b = scaleBitmap(b, ((canvas.getHeight() / 2) * b.getWidth()) / b.getHeight(), (canvas.getHeight() / 2), 0);
         int xPos = (int) ((canvas.getWidth() / 2) - (b.getWidth()/2));
         int yPos = (int) ((canvas.getHeight() / 2) - (b.getHeight()/2));
-        canvas.drawBitmap(b, xPos, yPos, mPaint);
+        canvas.drawBitmap(b, xPos, yPos+offsetY, mPaint);
     }
 
     private void drawText(Canvas canvas) {
@@ -139,7 +168,7 @@ public class CircularProgressBar extends View {
         int xPos = (canvas.getWidth() / 2);
         int yPos = (int) (canvas.getHeight()-(textSize+25));
 
-        canvas.drawText(text, xPos, yPos, mPaint);
+        canvas.drawText(text, xPos, yPos+offsetY, mPaint);
     }
 
     private float calcSweepAngleFromProgress(int progress) {
@@ -156,7 +185,7 @@ public class CircularProgressBar extends View {
      * @param progress progress between 0 and 100.
      */
     public void setProgress(int progress) {
-
+        mProgress = progress;
         ValueAnimator animator = ValueAnimator.ofFloat(mSweepAngle, calcSweepAngleFromProgress(progress));
         animator.setInterpolator(new DecelerateInterpolator());
         animator.setDuration(mAnimationDuration);
@@ -255,7 +284,7 @@ public class CircularProgressBar extends View {
     }
 
 
-    public static Bitmap scaleBitmap(Bitmap bitmapToScale, float newWidth, float newHeight) {
+    public static Bitmap scaleBitmap(Bitmap bitmapToScale, float newWidth, float newHeight, float angle) {
         if (bitmapToScale == null)
             return null;
 //get the original width and height
@@ -265,9 +294,19 @@ public class CircularProgressBar extends View {
         Matrix matrix = new Matrix();
 
 // resize the bit map
+
+        matrix.setRotate(angle, newWidth/2, newHeight/2);
         matrix.postScale(newWidth / width, newHeight / height);
 
 // recreate the new Bitmap and set it back
         return Bitmap.createBitmap(bitmapToScale, 0, 0, bitmapToScale.getWidth(), bitmapToScale.getHeight(), matrix, true);
+    }
+
+    private PointF getPosition(PointF center, float radius, float angle) {
+
+        PointF p = new PointF((float) (center.x + radius * Math.cos(Math.toRadians(angle))),
+                (float) (center.y + radius* Math.sin(Math.toRadians(angle))));
+
+        return p;
     }
 }
