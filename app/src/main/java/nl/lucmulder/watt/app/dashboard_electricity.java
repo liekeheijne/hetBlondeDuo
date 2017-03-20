@@ -68,7 +68,7 @@ public class dashboard_electricity extends Fragment {
 
         MainActivity mainActivity = (MainActivity) getActivity();
 
-        mainActivity.getDataTest();
+        mainActivity.getData();
 
         return inflater.inflate(R.layout.fragment_dashboard_electricity, container, false);
     }

@@ -61,7 +61,7 @@ public class dashboard_power extends Fragment {
         Log.d(TAG, "onCreateDashBoardPower");
         MainActivity mainActivity = (MainActivity) getActivity();
 
-        mainActivity.getDataTest();
+        mainActivity.getData();
 
         if (getArguments() != null) {
             mParam1 = getArguments().getString(ARG_PARAM1);
@@ -76,7 +76,7 @@ public class dashboard_power extends Fragment {
         Log.d(TAG, "onCreateView");
         MainActivity mainActivity = (MainActivity) getActivity();
 
-        mainActivity.getDataTest();
+        mainActivity.getData();
         return inflater.inflate(R.layout.fragment_dashboard_power, container, false);
     }
 

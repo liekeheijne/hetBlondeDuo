@@ -67,7 +67,7 @@ public class dashboard_gas extends Fragment {
         // Inflate the layout for this fragment
         MainActivity mainActivity = (MainActivity) getActivity();
 
-        mainActivity.getDataTest();
+        mainActivity.getData();
 
         return inflater.inflate(R.layout.fragment_dashboard_gas, container, false);
     }

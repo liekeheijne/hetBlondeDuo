@@ -10,6 +10,12 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="nl.lucmulder.watt.app.SettingsActivity">
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:id="@+id/welcome"
+        android:textSize="30sp"/>
+
     <Button
         android:text="@string/logout"
         android:layout_width="match_parent"

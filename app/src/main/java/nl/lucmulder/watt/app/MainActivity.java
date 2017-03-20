@@ -2,11 +2,9 @@ package nl.lucmulder.watt.app;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.Typeface;
 import android.support.design.widget.TabLayout;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -23,16 +21,17 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 
 import com.android.volley.Request;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.socket.client.IO;
+
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.text.DateFormat;
+import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -42,6 +41,8 @@ import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import io.socket.client.Socket;
+import io.socket.emitter.Emitter;
 import nl.lucmulder.watt.R;
 import nl.lucmulder.watt.app.enums.Period;
 import nl.lucmulder.watt.app.objects.Usage;
@@ -79,6 +80,7 @@ public class MainActivity extends AppCompatActivity {
 
     private int electricityPeriod = Period.DAY;
     private int gasPeriod = Period.DAY;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -129,10 +131,10 @@ public class MainActivity extends AppCompatActivity {
                         int tabIconColor = ContextCompat.getColor(getApplicationContext(), R.color.colorAccent);
                         tab.getIcon().setColorFilter(tabIconColor, PorterDuff.Mode.SRC_IN);
 
-                        Log.d(TAG, "" + tab.getPosition());
+//                        Log.d(TAG, "" + tab.getPosition());
 
                         if (tab.getPosition() == 0) {
-                            startTimer();
+//                            startTimer();
                         }
                     }
 
@@ -162,7 +164,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     Log.i(TAG, "Update every 5 seconds " + new Date().toString());
-                    getDataTest();
+                    getData();
                 }
             }, 100, 5000);
         }
@@ -195,13 +197,47 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        startTimer();
+//        startTimer();
+
+        final Socket socket;
+        try {
+            socket = IO.socket("http://vps.lucmulder.nl:4000");
+
+            socket.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
+
+                @Override
+                public void call(Object... args) {
+                    socket.emit("join", 1);
+                    Log.d(TAG, "connected");
+//                    socket.disconnect();
+                }
+
+            }).on("needToUpdate", new Emitter.Listener() {
+
+                @Override
+                public void call(Object... args) {
+                    Log.d(TAG, "Need to update");
+                    getData();
+                }
+
+            }).on(Socket.EVENT_DISCONNECT, new Emitter.Listener() {
+
+                @Override
+                public void call(Object... args) {
+                    Log.d(TAG, "disconnected");
+                }
+
+            });
+            socket.connect();
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        startTimer();
+//        startTimer();
     }
 
     @Override
@@ -259,7 +295,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void getDataTest() {
+
+    public void getData() {
 
         RequestActionListenerInterface doRequest = new RequestActionListenerInterface() {
             @Override
@@ -333,29 +370,29 @@ public class MainActivity extends AppCompatActivity {
             Date firstDate = format.parse(usage.first.timestamp);
 
             float electricNow = Float.parseFloat(usage.dal) + Float.parseFloat(usage.piek);
-            float electricThen = Float.parseFloat(usage.thisWeek.electric);
-            Log.d(TAG, "electricNow " + electricNow);
-            Log.d(TAG, "electricThen " + electricThen);
+            float electricThen = Float.parseFloat(usage.first.dal) + Float.parseFloat(usage.first.piek);
+//            Log.d(TAG, "electricNow " + electricNow);
+//            Log.d(TAG, "electricT/hen " + electricThen);
 
             int days = (int) ((new Date().getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24));
-            Log.d(TAG, "days " + days);
+//            Log.d(TAG, "days " + days);
             int weeks = Math.round((float) days / 7);
-            Log.d(TAG, "weeks " + weeks);
+//            Log.d(TAG, "weeks " + weeks);
 
             averageElectricWeek = (electricNow - electricThen) / weeks;
 
             Calendar myDate = Calendar.getInstance(); // set this up however you need it.
             int dow = myDate.get(Calendar.DAY_OF_WEEK);
-            dow = dow -1;
-            if(dow < 1){
+            dow = dow - 1;
+            if (dow < 1) {
                 dow = 7;
             }
 
-            float percentageOfWeek = ((float) dow/7);
+            float percentageOfWeek = ((float) dow / 7);
 
-            Log.d(TAG, "dow " + dow);
+//            Log.d(TAG, "dow " + dow);
 
-            realisticAverageElectricWeek= averageElectricWeek * percentageOfWeek;
+            realisticAverageElectricWeek = averageElectricWeek * percentageOfWeek;
 
         } catch (ParseException e) {
             e.printStackTrace();
@@ -374,24 +411,24 @@ public class MainActivity extends AppCompatActivity {
             Date firstDate = format.parse(usage.first.timestamp);
 
             float electricNow = Float.parseFloat(usage.dal) + Float.parseFloat(usage.piek);
-            float electricThen = Float.parseFloat(usage.thisMonth.electric);
+            float electricThen = Float.parseFloat(usage.first.dal) + Float.parseFloat(usage.first.piek);
 
             int days = (int) ((new Date().getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24));
 
             Calendar c = Calendar.getInstance();
             int daysOfCurrentMonth = c.getActualMaximum(Calendar.DAY_OF_MONTH);
-            int months = Math.round(days / daysOfCurrentMonth);
+            int months = Math.round(days / 30);
 
             averageElectricMonth = (electricNow - electricThen) / months;
 
-            float percentageOfMonth = (float) c.get(Calendar.DAY_OF_MONTH)/daysOfCurrentMonth;
-            Log.d(TAG, "Calendar.DAY_OF_MONTH " + c.get(Calendar.DAY_OF_MONTH));
-            Log.d(TAG, "daysOfCurrentMonth " + daysOfCurrentMonth);
-            Log.d(TAG, "percentageOfMonth " + percentageOfMonth);
+            float percentageOfMonth = (float) c.get(Calendar.DAY_OF_MONTH) / daysOfCurrentMonth;
+//            Log.d(TAG, "Calendar.DAY_OF_MONTH " + c.get(Calendar.DAY_OF_MONTH));
+//            Log.d(TAG, "daysOfCurrentMonth " + daysOfCurrentMonth);
+//            Log.d(TAG, "percentageOfMonth " + percentageOfMonth);
             realisticAverageElectricMonth = averageElectricMonth * percentageOfMonth;
 
-            Log.d(TAG, "averageElectricMonth " + averageElectricMonth);
-            Log.d(TAG, "realisticAverageElectricMonth " + realisticAverageElectricMonth);
+//            Log.d(TAG, "averageElectricMonth " + averageElectricMonth);
+//            Log.d(TAG, "realisticAverageElectricMonth " + realisticAverageElectricMonth);
         } catch (ParseException e) {
             e.printStackTrace();
         }
@@ -437,7 +474,7 @@ public class MainActivity extends AppCompatActivity {
             Date firstDate = format.parse(usage.first.timestamp);
 
             float gasNow = Float.parseFloat(usage.gas);
-            float gasThen = Float.parseFloat(usage.thisWeek.gas);
+            float gasThen = Float.parseFloat(usage.first.gas);
 
             int days = (int) ((new Date().getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24));
             int weeks = (int) days / 7;
@@ -445,14 +482,14 @@ public class MainActivity extends AppCompatActivity {
 
             Calendar myDate = Calendar.getInstance(); // set this up however you need it.
             int dow = myDate.get(Calendar.DAY_OF_WEEK);
-            dow = dow -1;
-            if(dow < 1){
+            dow = dow - 1;
+            if (dow < 1) {
                 dow = 7;
             }
 
-            float percentageOfWeek = ((float) dow/7);
+            float percentageOfWeek = ((float) dow / 7);
 
-            realisticAverageGasWeek= averageGasWeek * percentageOfWeek;
+            realisticAverageGasWeek = averageGasWeek * percentageOfWeek;
 
         } catch (ParseException e) {
             e.printStackTrace();
@@ -481,7 +518,7 @@ public class MainActivity extends AppCompatActivity {
 
             averageGasMonth = (gasNow - gasThen) / months;
 
-            float percentageOfMonth = (float) c.get(Calendar.DAY_OF_MONTH)/daysOfCurrentMonth;
+            float percentageOfMonth = (float) c.get(Calendar.DAY_OF_MONTH) / daysOfCurrentMonth;
 
             realisticAverageGasMonth = averageGasMonth * percentageOfMonth;
 
@@ -508,7 +545,8 @@ public class MainActivity extends AppCompatActivity {
 
         float currentElectric = Float.parseFloat(usage.thisWeek.electric);
         int electricPercentage = Math.round(currentElectric / getAverageWeekElectric(usage) * 50);
-
+        Log.d(TAG, "" + currentElectric);
+        Log.d(TAG, "" + getAverageWeekElectric(usage));
         if (electricPercentage > 100) {
             electricPercentage = 100;
         }
@@ -582,7 +620,7 @@ public class MainActivity extends AppCompatActivity {
         return Html.fromHtml(((float) Math.round(Float.parseFloat(usage.thisMonth.gas) * 100) / 100) + " M<sup>3</sup>");
     }
 
-    private void initPowerView(){
+    private void initPowerView() {
 
         circularProgressBarPower = (CircularProgressBar) findViewById(R.id.circularProgressPower);
         powerView = (TextView) findViewById(R.id.powerView);
@@ -600,9 +638,8 @@ public class MainActivity extends AppCompatActivity {
             circularProgressBarPower.setProgressColor(ColorUtils.getColor(powerPercentage / 100));
             circularProgressBarPower.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.blue));
             circularProgressBarPower.setProgress(Math.round(powerPercentage));
-            circularProgressBarPower.setText(currentWattage + " W");
             circularProgressBarPower.setImage(R.drawable.flash);
-            circularProgressBarPower.showProgressText(false);
+            circularProgressBarPower.setImageOffset(0, 33);
         }
 
         Typeface font = Typeface.createFromAsset(getAssets(), "Megrim.ttf");
@@ -613,7 +650,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void initViewElectric(){
+    private void initViewElectric() {
 
         circularProgressElectric = (CircularProgressBar) findViewById(R.id.circularProgressElectric);
         electricView = (TextView) findViewById(R.id.electricView);
@@ -622,13 +659,13 @@ public class MainActivity extends AppCompatActivity {
             circularProgressElectric.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    Log.d(TAG, "Electric graph clicked");
+//                    Log.d(TAG, "Electric graph clicked");
                     electricityPeriod++;
                     if (electricityPeriod > 2) {
                         electricityPeriod = 0;
                     }
-                    Log.d(TAG, "electricityPeriod " + electricityPeriod);
-                    Log.d(TAG, "Period.DAY " + Period.DAY);
+//                    Log.d(TAG, "electricityPeriod " + electricityPeriod);
+//                    Log.d(TAG, "Period.DAY " + Period.DAY);
 
                     updateViewELectric();
 
@@ -646,30 +683,30 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void updateViewELectric(){
+    private void updateViewELectric() {
         switch (electricityPeriod) {
             case Period.DAY:
                 circularProgressElectric.setText("Dag");
-                circularProgressElectric.setProgressColor(ColorUtils.getColor((float)getPercentageDayElectric(usage)/100));
+                circularProgressElectric.setProgressColor(ColorUtils.getColor((float) getPercentageDayElectric(usage) / 100));
                 circularProgressElectric.setProgress(getPercentageDayElectric(usage));
                 electricView.setText(getTextElectricDay(usage));
                 break;
             case Period.WEEK:
                 circularProgressElectric.setText("Week");
-                circularProgressElectric.setProgressColor(ColorUtils.getColor((float)getPercentageWeekElectric(usage)/100));
+                circularProgressElectric.setProgressColor(ColorUtils.getColor((float) getPercentageWeekElectric(usage) / 100));
                 circularProgressElectric.setProgress(getPercentageWeekElectric(usage));
                 electricView.setText(getTextElectricWeek(usage));
                 break;
             case Period.MONTH:
                 circularProgressElectric.setText("Maand");
-                circularProgressElectric.setProgressColor(ColorUtils.getColor((float)getPercentageMonthElectric(usage)/100));
+                circularProgressElectric.setProgressColor(ColorUtils.getColor((float) getPercentageMonthElectric(usage) / 100));
                 circularProgressElectric.setProgress(getPercentageMonthElectric(usage));
                 electricView.setText(getTextElectricMonth(usage));
                 break;
         }
     }
 
-    private void initViewGas(){
+    private void initViewGas() {
 
         circularProgressGas = (CircularProgressBar) findViewById(R.id.circularProgressGas);
         gasView = (TextView) findViewById(R.id.gasView);
@@ -678,7 +715,7 @@ public class MainActivity extends AppCompatActivity {
             circularProgressGas.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    Log.d(TAG, "Gas graph clicked");
+//                    Log.d(TAG, "Gas graph clicked");
                     gasPeriod++;
                     if (gasPeriod > 2) {
                         gasPeriod = 0;
@@ -699,24 +736,24 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void updateViewGas(){
+    private void updateViewGas() {
         switch (gasPeriod) {
             case Period.DAY:
                 circularProgressGas.setText("Dag");
-                circularProgressGas.setProgressColor(ColorUtils.getColor((float)getPercentageDayGas(usage)/100));
+                circularProgressGas.setProgressColor(ColorUtils.getColor((float) getPercentageDayGas(usage) / 100));
                 circularProgressGas.setProgress(getPercentageDayGas(usage));
                 gasView.setText(getTextGasDay(usage));
 
                 break;
             case Period.WEEK:
                 circularProgressGas.setText("Week");
-                circularProgressGas.setProgressColor(ColorUtils.getColor((float)getPercentageWeekGas(usage)/100));
+                circularProgressGas.setProgressColor(ColorUtils.getColor((float) getPercentageWeekGas(usage) / 100));
                 circularProgressGas.setProgress(getPercentageWeekGas(usage));
                 gasView.setText(getTextGasWeek(usage));
                 break;
             case Period.MONTH:
                 circularProgressGas.setText("Maand");
-                circularProgressGas.setProgressColor(ColorUtils.getColor((float)getPercentageMonthGas(usage)/100));
+                circularProgressGas.setProgressColor(ColorUtils.getColor((float) getPercentageMonthGas(usage) / 100));
                 circularProgressGas.setProgress(getPercentageMonthGas(usage));
                 gasView.setText(getTextGasMonth(usage));
                 break;

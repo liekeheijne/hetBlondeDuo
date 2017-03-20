@@ -18,6 +18,7 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.RectF;
 import android.graphics.Typeface;
+import android.graphics.drawable.shapes.OvalShape;
 import android.os.Build;
 import android.os.Environment;
 import android.support.annotation.RequiresApi;
@@ -35,6 +36,7 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 
 import nl.lucmulder.watt.R;
+import nl.lucmulder.watt.utils.ColorUtils;
 
 /**
  * Simple single android view component that can be used to showing a round progress bar.
@@ -65,7 +67,11 @@ public class CircularProgressBar extends View {
 
     private final String TAG = "CircularProgressBar";
 
+    private int offsetX = 13;
     private int offsetY = 13;
+
+    private int imageOffsetX = 0;
+    private int imageOffsetY = 0;
 
     private final Paint mPaint;                 // Allocate paint outside onDraw to avoid unnecessary object creation
 
@@ -89,7 +95,7 @@ public class CircularProgressBar extends View {
         initMeasurments();
         drawOutlineArc(canvas);
 
-        if (mDrawImage && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+        if (mDrawImage) {
             drawImage(canvas);
         } else {
             mDrawText = true;
@@ -113,8 +119,8 @@ public class CircularProgressBar extends View {
 
         final int diameter = Math.min(mViewWidth, mViewHeight) - (mStrokeWidth * 2);
 
-        final RectF outerOval = new RectF(mStrokeWidth, mStrokeWidth+offsetY, diameter, diameter);
-        final RectF outerOval2 = new RectF(mStrokeWidth, mStrokeWidth+offsetY, diameter, diameter);
+        final RectF outerOval = new RectF(mStrokeWidth+offsetX, mStrokeWidth+offsetY, diameter+offsetX, diameter+offsetY);
+        final RectF outerOval2 = new RectF(mStrokeWidth+offsetX, mStrokeWidth+offsetY, diameter+offsetX, diameter+offsetY);
 
         mPaint.setColor(getResources().getColor(R.color.lightGrey));
         mPaint.setStrokeWidth(3);
@@ -122,7 +128,7 @@ public class CircularProgressBar extends View {
 
         canvas.drawArc(outerOval2, 0, 360, false, mPaint);
 
-        mPaint.setColor(mProgressColor);
+        mPaint.setColor(ColorUtils.getColor((float)calcProgressFromSweepAngle(mSweepAngle)/100));
         mPaint.setStrokeWidth(mStrokeWidth);
         mPaint.setAntiAlias(true);
         mPaint.setStrokeCap(mRoundedCorners ? Paint.Cap.ROUND : Paint.Cap.BUTT);
@@ -131,28 +137,42 @@ public class CircularProgressBar extends View {
     }
 
     private void drawArrow(Canvas canvas){
-        final int diameter = Math.min(mViewWidth, mViewHeight) - (mStrokeWidth * 2);
+        final int diameter = Math.min(mViewWidth, mViewHeight) - (mStrokeWidth * 3);
+//        final int diameter = Math.min(mViewWidth, mViewHeight);
 
         Bitmap b = BitmapFactory.decodeResource(getResources(), R.drawable.arrow);
         b = scaleBitmap(b, mStrokeWidth*3, (mStrokeWidth*3 * b.getHeight()) / b.getWidth(), mSweepAngle);
         int xPos = (int) ((canvas.getWidth() / 2) - (b.getWidth()/2));
         int yPos = (int) ((canvas.getHeight() / 2) - (b.getHeight()/2));
 
-        PointF center = new PointF(xPos-mStrokeWidth/2, yPos-mStrokeWidth/2);
-        Log.d(TAG, "Center y " +center.y);
-        PointF position = getPosition(center, diameter/2 - mStrokeWidth/2 ,mSweepAngle-90);
-        mPaint.setColorFilter(new PorterDuffColorFilter(mProgressColor, PorterDuff.Mode.SRC_IN));
+//        int xPos = (int) ((canvas.getWidth() / 2));
+//        int yPos = (int) ((canvas.getHeight() / 2));
+
+        PointF center = new PointF(xPos-mStrokeWidth/2+offsetX, yPos-mStrokeWidth/2+offsetY);
+//        int number = 100;
+
+//        mPaint.setColor(Color.BLUE);
+//        PointF center = new PointF(xPos-mStrokeWidth/2+offsetX, yPos+offsetY-mStrokeWidth/2);
+//        Log.d(TAG, "start drawing");
+//        for (int i = 0 ; i < number; i++){
+//            PointF position = getPosition(center, diameter/2 ,calcSweepAngleFromProgress(i));
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//                Log.d(TAG, "positions: " + position.x + " " +  position.y);
+//                canvas.drawRoundRect(position.x, position.y, position.x+1, position.y+1, 1, 1, mPaint);
+//            }
+//        }
+        PointF position = getPosition(center, diameter/2 ,mSweepAngle-90);
+        mPaint.setColorFilter(new PorterDuffColorFilter(ColorUtils.getColor((float)calcProgressFromSweepAngle(mSweepAngle)/100), PorterDuff.Mode.SRC_IN));
         canvas.drawBitmap(b, position.x, position.y, mPaint);
         mPaint.setColorFilter(null);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void drawImage(Canvas canvas) {
         Bitmap b = BitmapFactory.decodeResource(getResources(), mImage);
         b = scaleBitmap(b, ((canvas.getHeight() / 2) * b.getWidth()) / b.getHeight(), (canvas.getHeight() / 2), 0);
         int xPos = (int) ((canvas.getWidth() / 2) - (b.getWidth()/2));
         int yPos = (int) ((canvas.getHeight() / 2) - (b.getHeight()/2));
-        canvas.drawBitmap(b, xPos, yPos+offsetY, mPaint);
+        canvas.drawBitmap(b, xPos+offsetX + imageOffsetX, yPos-20 + imageOffsetY, mPaint);
     }
 
     private void drawText(Canvas canvas) {
@@ -168,7 +188,7 @@ public class CircularProgressBar extends View {
         int xPos = (canvas.getWidth() / 2);
         int yPos = (int) (canvas.getHeight()-(textSize+25));
 
-        canvas.drawText(text, xPos, yPos+offsetY, mPaint);
+        canvas.drawText(text, xPos+offsetX, yPos-15, mPaint);
     }
 
     private float calcSweepAngleFromProgress(int progress) {
@@ -281,6 +301,11 @@ public class CircularProgressBar extends View {
                 outputFile.delete();
         }
         return null;
+    }
+
+    public void setImageOffset(int x, int y){
+        imageOffsetX = x;
+        imageOffsetY = y;
     }
 
 
